@@ -25,12 +25,12 @@
     },
     "autoload": {
         "psr-4": {
-          "Ymir\\Bridge\\Monolog\\": "src"
+            "Ymir\\Bridge\\Monolog\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-          "Ymir\\Bridge\\Monolog\\Tests\\": "tests"
+            "Ymir\\Bridge\\Monolog\\Tests\\": "tests"
         }
     },
     "prefer-stable": true,
