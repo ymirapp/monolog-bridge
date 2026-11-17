@@ -91,8 +91,14 @@ class CloudWatchFormatter implements FormatterInterface
 
         $message = str_replace(["\r\n", "\r", "\n"], ' ', $message);
         $json = $this->toJson($this->normalizeRecord($record), true);
+        $line = sprintf("%s\t%s\t%s\n", $level, $message, $json);
+        $requestId = $_SERVER['AWS_REQUEST_ID'] ?? null;
 
-        return sprintf("%s\t%s\t%s\n", $level, $message, $json);
+        if (!empty($requestId) && is_string($requestId)) {
+            $line = "{$requestId}\t{$line}";
+        }
+
+        return $line;
     }
 
     /**

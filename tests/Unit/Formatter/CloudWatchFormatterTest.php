@@ -20,6 +20,11 @@ use Ymir\Bridge\Monolog\Formatter\CloudWatchFormatter;
 
 class CloudWatchFormatterTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        unset($_SERVER['AWS_REQUEST_ID']);
+    }
+
     public function testFormatBatch(): void
     {
         $formatter = new CloudWatchFormatter();
@@ -80,6 +85,25 @@ class CloudWatchFormatterTest extends TestCase
         $this->assertEquals(['baz' => 'qux'], $data['extra']);
     }
 
+    public function testFormatWithArrayDoesNotStartWithRequestIdIfItIsEmpty(): void
+    {
+        $_SERVER['AWS_REQUEST_ID'] = '';
+
+        $output = (new CloudWatchFormatter())->format(['message' => 'test message', 'level_name' => 'INFO', 'context' => [], 'extra' => []]);
+
+        $this->assertStringStartsWith("INFO\ttest message\t{", $output);
+    }
+
+    public function testFormatWithArrayStartsWithRequestId(): void
+    {
+        $_SERVER['AWS_REQUEST_ID'] = '8f507cfc-8b35-4e7e-9f26-f2a3a6e7e1a2';
+
+        $output = (new CloudWatchFormatter())->format(['message' => 'test message', 'level_name' => 'INFO', 'context' => [], 'extra' => []]);
+
+        $this->assertStringStartsWith("8f507cfc-8b35-4e7e-9f26-f2a3a6e7e1a2\tINFO\ttest message\t{", $output);
+        $this->assertSame(3, substr_count($output, "\t"));
+    }
+
     public function testFormatWithException(): void
     {
         $formatter = new CloudWatchFormatter();
@@ -133,6 +157,19 @@ class CloudWatchFormatterTest extends TestCase
         $this->assertEquals('INFO', $data['level']);
         $this->assertEquals(['foo' => 'bar'], $data['context']);
         $this->assertEquals(['baz' => 'qux'], $data['extra']);
+    }
+
+    public function testFormatWithLogRecordStartsWithRequestId(): void
+    {
+        if (!class_exists(LogRecord::class)) {
+            $this->markTestSkipped('Monolog 3 required');
+        }
+
+        $_SERVER['AWS_REQUEST_ID'] = '8f507cfc-8b35-4e7e-9f26-f2a3a6e7e1a2';
+
+        $output = (new CloudWatchFormatter())->format(new LogRecord(new \DateTimeImmutable(), 'test', Level::Error, 'test message'));
+
+        $this->assertStringStartsWith("8f507cfc-8b35-4e7e-9f26-f2a3a6e7e1a2\tERROR\ttest message\t{", $output);
     }
 
     public function testFormatWithNewLinesInMessage(): void
