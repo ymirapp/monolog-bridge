@@ -8,6 +8,9 @@ on:
       - 'tests/**'
       - 'composer.json'
       - 'composer.lock'
+      - '.php-cs-fixer.dist.php'
+      - 'phpunit.xml.dist'
+      - 'rector.php'
 
 jobs:
   code-quality:
